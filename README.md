@@ -1,88 +1,44 @@
-puppet-git-hooks
-================
+# Puppet Syntax Checkers
 
-Git hooks to assist puppet module development.  Client side hooks allow for various checks before commits are staged.  Server side hooks are provided for infrastructural reinformence of various standardaizations compliance.
+All the scripts were taken from [drwhal/puppet-git-hooks](https://github.com/drwahl/puppet-git-hooks) with almost no changes.
 
-Current supported pre-commit (client side) checks
-=================================================
+## Current supported pre-receive (server side) checks
 
 * Puppet manifest syntax
-* Erb template syntax
+* ERB and EPP template syntax
+* Ruby syntax
 * Puppet-lint
-* Rspec-puppet
-* Yaml (hiera data) syntax
-* r10k puppetfile syntax
+* YAML and JSON (hieradata) syntax
+* Puppetfile syntax
 
-Current supported pre-receive (server side) checks
-==================================================
+## Usage
 
-* Puppet manifest syntax
-* Erb template syntax
-* Puppet-lint
-* Yaml (hiera data) syntax
+Validate Puppet code on the version control server with a pre-receive git hook.
 
-Usage
-=====
+### BitBucket
 
-In your git repository you can symlink the pre-commit file from this repository to the .git/hooks/pre-commit of your repository you want to implement this feature.
+- Install the required gems in the BitBucket server
+- Clone this project and ensure the scripts have execution permissions
+- Enforce the main script, puppet_syntax_checkers.sh at the pre-receive git stage
 
-```bash
-$ ln -s /path/to/this/repo/puppet-git-hooks/pre-commit .git/hooks/pre-commit
+I use the plugin [external hooks](https://marketplace.atlassian.com/plugins/com.ngs.stash.externalhooks.external-hooks/server/overview)
+
 ```
-
-If you are using git submodules this can be achieved by getting the gitdir from the .git file in your submodule and symlinking to that gitdir location/
-
-```bash
-$ cat .git
-$ ln -s /path/to/this/repo/puppet-git-hooks/pre-commit ../path/to/git/dir/from/previous/command/hooks/pre-commit
+★ lmacchi@Pulpo 13:53:42 /tmp/puppet/control-repo> (production) git push origin production
+Counting objects: 12, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (12/12), done.
+Writing objects: 100% (12/12), 1.05 KiB | 1.05 MiB/s, done.
+Total 12 (delta 6), reused 0 (delta 0)
+remote: site/profile/manifests/base.pp - WARNING: double quoted string containing no variables on line 41
+remote: site/profile/manifests/base.pp - ERROR: single quoted string containing a variable found on line 42
+remote: Error: styleguide violation in site/profile/manifests/base.pp (see above)
+remote: Error: 2 styleguide violation(s) found. Commit will be aborted.
+remote: Please follow the puppet style guide outlined at:
+remote: http://docs.puppetlabs.com/guides/style_guide.html
+remote: Error: 1 subhooks failed. Declining push.
+remote:
+To ssh://git@bitbucket.example.com:7999/pup/control-repo.git
+ ! [remote rejected] production -> production (pre-receive hook declined)
+error: failed to push some refs to 'ssh://git@bitbucket.example.com:7999/pup/control-repo.git'
 ```
-
-deploy-git-hook
-===============
-
-  usage: deploy-git-hook -d /path/to/git/repository [-a] [-c] [-r] [-u]
-
-    -h            this help screen
-    -d path       install the hooks to the specified path
-    -a            deploy pre-commit and pre-receive hooks
-    -c            deploy only the pre-commit hook
-    -r            deploy only the pre-receive hook
-    -u            deploy only the post-update hook
-    -g            enable to install in Git Lab repo custom_hooks
-
-  returns status code of 0 for success, otherwise, failure
-
-  examples:
-
-  1) to install pre-commit and pre-receive the hooks to foo git repo:
-
-    deploy-git-hook -d /path/to/foo -a
-
-  2) to install only the pre-commit hook to bar git repo:
-
-    deploy-git-hook -d /path/to/bar -c
-
-  3) to install only the pre-commit and pre-receive hook to foobar git repo:
-
-    deploy-git-hook -d /path/to/foobar -c -r
-
-In a wrapper
-===============
-You can call from your own custom pre-commit. This allows you to combine these with your own checks
-
-For example, if you've cloned this repo to ~/.puppet-git-hooks
-
-
-The .git/hooks/pre-commit with your puppet code might look like this
-
-```bash
-#!bin/bash
-
-# my_other_checks
-
-# puppet-git-hooks
-if [ -e ~/.puppet-git-hooks/pre-commit ]; then
-~/.puppet-git-hooks/pre-commit
-fi
-```
-
